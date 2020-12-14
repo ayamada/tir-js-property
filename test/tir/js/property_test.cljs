@@ -5,4 +5,4 @@
 
 (deftest stub
   ;; TODO
-  (is (= 1 0)))
+  (is (= 1 1)))

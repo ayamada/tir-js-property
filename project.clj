@@ -18,7 +18,7 @@
                                          :output-dir "target"
                                          :target :nodejs
                                          :main tir.js.property-test-runner
-                                         :optimizations :whitespace
+                                         :optimizations :simple
                                          :pretty-print true
                                          :process-shim false}}}}
-  :aliases {"cljs-test" ["doo" "node" "test" "once"]})
+  :aliases {"test-cljs" ["doo" "node" "test" "once"]})
