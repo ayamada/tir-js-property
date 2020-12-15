@@ -1,4 +1,4 @@
-(defproject jp.ne.tir/tir-js-property "1.0.0"
+(defproject jp.ne.tir/tir-js-property "1.0.0-ADVANCED"
   :description "js property manipulator utility"
   :url "https://github.com/ayamada/tir-js-property"
   :license {:name "Zlib License"
