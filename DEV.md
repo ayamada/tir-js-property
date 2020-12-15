@@ -3,7 +3,7 @@
 1. `lein test-cljs`
 2. Bump up version in `project.clj`
 3. `git add . && git commit -S -m 'chore: Releasing X.Y.Z'`
-4. `git tag -a vX.Y.Z -m '(content of update)'`
+4. `git tag -S -a vX.Y.Z -m '(content of update)'`
 5. `lein clean`
 6. `lein deploy clojars`
 7. Add version to `-ADVANCED` in `project.clj`
