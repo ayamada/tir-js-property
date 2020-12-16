@@ -64,8 +64,7 @@
              (assert (even? (count args)))
              (loop [kv-list args]
                (when-not (empty? kv-list)
-                 (let [k (first kv-list)
-                       v (second kv-list)
+                 (let [[k v & carry-over] kv-list
                        has-name? (or (keyword? k) (symbol? k))
                        nk-camel (if has-name?
                                   (kebab->camel (name k))
@@ -76,7 +75,7 @@
                            o)]
                    (when o
                      (aset o nk-camel v))
-                   (recur (nnext kv-list)))))
+                   (recur carry-over))))
              o)))
 
 #?(:cljs (defn get-fn [o k]
