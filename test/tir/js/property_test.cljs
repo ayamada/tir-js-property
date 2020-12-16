@@ -7,36 +7,52 @@
                "foo-buz" 2
                "WebGLVersion" 2
                "jsLikeCamelProperty3" 3
-               "isEnableCache" true
+               "isVisible" true
                "subMenu" #js {"itemName" "exit"}}]
     (is (= 1 (p/get t :foo-bar))) ; Camelize keyword automatically
-    (is (= 1 (p/get t :fooBar))) ; But, you can give camel case keyword
-    (is (= 2 (p/get t "foo-buz"))) ; Not camelize string automatically
+    (is (= 1 (p/get t :fooBar))) ; But, can give camel case keyword too
+    (is (= 2 (p/get t "foo-buz"))) ; Not camelize string
     (is (= 2 (p/get t "WebGLVersion"))) ; Use string for complex word
     (is (= 3 (p/get t :js-like-camel-property-3)))
     (is (= 3 (p/get t :js-like-camel-property3))) ; Same
-    (is (= true (p/get t :enable-cache?))) ; `?` convert to `is` prefix
+    (is (= true (p/get t :visible?))) ; Convert from `?` suffix to `is` prefix
     (is (= "exit" (p/get t :sub-menu/item-name))) ; Suport until two depth
-    (p/set! t :a-new-property-123 123)
-    (is (= 123 (aget t "aNewProperty123")))
-    (p/set! t :sub-menu/item-num 45) ; Can set two depth property
-    (is (= 45 (aget (aget t "subMenu") "itemNum")))
-    (is (= t (p/set! t :new-value 6))) ; `p/set!` return target object
-    (is (= (js->clj (p/set! #js {} :depth/layer 1))
-           {})) ; Cannot set child to nonexistence node directly
-    (p/set! t :--private-cljs-prop 7) ; `:--` as a mark of private use
-    (is (= 7 (aget t "-privateCljsProp")))))
+    (p/set! t :a-new-property-123 123) ; `p/set!` can set new property value
+    (is (= 123 (aget t "aNewProperty123"))) ; `p/set!` works
+    (p/set! t :i 4 :j 5 :k 6) ; `p/set!` can set multiple properties
+    (is (= 4 (p/get t :i)))
+    (is (= 5 (p/get t :j)))
+    (is (= 6 (p/get t :k)))
+    (p/assoc! t :i 7 :j 8 :k 9) ; `p/assoc!` is alias of `p/set!`
+    (is (= 7 (p/get t :i)))
+    (is (= 8 (p/get t :j)))
+    (is (= 9 (p/get t :k)))
+    (is (= t (p/set! t :new-value 1))) ; `p/set!` return target object always
+    (is (= 1 (aget t "newValue")))
+    (p/set! t :sub-menu/item-num 23) ; `p/set!` can set two depth property
+    (is (= 23 (aget (aget t "subMenu") "itemNum")))
+    (is (= (js->clj (p/set! #js {} :none/child 4)) ; But, `p/set!` cannot set
+           {})) ; child to nonexistence parent node directly
+    (p/set! t :--private-cljs-prop 5) ; `:--` as a mark of private use
+    (is (= (aget t "-privateCljsProp")
+           5)))) ; Js property name don't begin `-` normally
 
 (deftest util
+  ;; These are useful for make sure conversion of `p/get` and `p/set!`
   (is (= "isEnableCache" (p/kebab-string->camel-string "enable-cache?")))
   (is (= "isEnableCache" (p/kebab->camel "enable-cache?"))) ; Same
   (is (thrown? js/Error (p/kebab->camel :enable-cache?))) ; Must be string
+  ;; These are utility functions
   (is (= (js->clj (p/merge! (js-obj)
                             {:foo-bar 1 :visible? 2}
                             {:a 3}))
          {"fooBar" 1 "isVisible" 2 "a" 3}))
-  (is (= (js->clj (p/map->js-obj {:version-number 4}))
-         {"versionNumber" 4})))
+  ;; Caution: this is shallow, cannot convert depth of property
+  (is (= (js->clj (p/map->js-obj {:version-number 4
+                                  :parent/child 5
+                                  :foo-bar {:baz-hoge 123}}))
+         {"versionNumber" 4
+          "fooBar" {:baz-hoge 123}})))
 
 (deftest about-nil
   (let [t #js {"fooBar" 1
@@ -85,13 +101,13 @@
     (is (nil? (p/get nil k2)))
     (is (nil? (p/get nil (identity k2))))
     (is (nil? (p/get t nil)))
-    (p/set! t k1 3)
-    (is (= 3 (p/get t k1)))
-    (p/set! t k2 4)
-    (is (= 4 (p/get t k2)))
+    (p/set! t k1 10)
+    (is (= 10 (p/get t k1)))
+    (p/set! t k2 20)
+    (is (= 20 (p/get t k2)))
     (p/set! t k3 true)
     (is (= true (p/get t k3)))
-    (p/set! t k4 5)
+    (p/set! t k4 4) ; This do nothing,
     (is (nil? (p/get t k4))) ; because (aget t "none") is not exist
     (is (nil? (p/set! nil k1 true)))
     (is (nil? (p/set! nil (identity k1) true)))
@@ -145,8 +161,8 @@
     (is (= 5 @a-count))
     (p/merge! (o-fn) {:a 1 :b 2 :c 3} {:d 4 :e 5})
     (is (= 6 @a-count))
-    (p/get (o-fn) ((fn []
+    (p/set! o :foo (do
                      (swap! a-count inc)
-                     :table/child)))
-    (is (= 8 @a-count))))
+                     "foo"))
+    (is (= 7 @a-count))))
 
