@@ -144,5 +144,9 @@
     (p/get (o-fn) :foo)
     (is (= 5 @a-count))
     (p/merge! (o-fn) {:a 1 :b 2 :c 3} {:d 4 :e 5})
-    (is (= 6 @a-count))))
+    (is (= 6 @a-count))
+    (p/get (o-fn) ((fn []
+                     (swap! a-count inc)
+                     :table/child)))
+    (is (= 8 @a-count))))
 
