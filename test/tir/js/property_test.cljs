@@ -40,7 +40,7 @@
     (is (= (aget t "-privateCljsProp") 5)) ; Js property name don't begin `-`
     (p/set! t :foo-bar/child 6) ; Do nothing, because "fooBar" already exists,
     (is (= 1 (p/get t :foo-bar))) ; and js allow `(1)["child"] = 6` but inanity
-    ;; p/set-js!
+    ;; p/set-js! like p/set!, but throw exception by nil parent node or nil key
     (p/set-js! t :new-p 12)
     (is (= 12 (aget t "newP"))) ; `p/set-js!` works
     (p/set-js! t :new-p2 34 :sub-menu/new-p2 56)
