@@ -3,8 +3,6 @@
   #?(:cljs (:require-macros [tir.js.property :as m]))
   (:require [clojure.string :as string]))
 
-;;; TODO: implement delete! (but scarcely used)
-
 ;;; differ between this and camel-snake-kebab a bit
 (defn kebab-string->camel-string [s]
   (assert (string? s))
@@ -23,12 +21,6 @@
 
 
 
-#?(:clj (defmacro censor-nil [o error-msg]
-          `(let [o# ~o]
-             (if (nil? o#)
-               (throw (js/Error. ~error-msg))
-               o#))))
-
 ;;; cljs.core/aget and cljs.core/aset is not better for about nil
 
 #?(:clj (defmacro aget [o k]
@@ -36,12 +28,32 @@
                  k# ~k]
              (when-not (nil? o#)
                (when-not (nil? k#)
-                 (cljs.core/unchecked-get o# k#))))))
+                 (~'unchecked-get o# k#))))))
 
 #?(:clj (defmacro aset [o k v]
-          `(cljs.core/unchecked-set (censor-nil ~o "Object not found")
-                                    (censor-nil ~k "Key must not be nil")
-                                    ~v)))
+          `(let [o# ~o
+                 k# ~k]
+             (when-not (nil? o#)
+               (when-not (nil? k#)
+                 (~'unchecked-set o# k# ~v))))))
+
+#?(:clj (defmacro censor-nil [o error-msg]
+          `(let [o# ~o]
+             (if (nil? o#)
+               (throw (js/Error. ~error-msg))
+               o#))))
+
+#?(:clj (defmacro aset-js [o k v]
+          `(~'unchecked-set (censor-nil ~o "Object not found")
+                            (censor-nil ~k "Key must not be nil")
+                            ~v)))
+
+#?(:clj (defmacro js-delete [o k]
+          `(let [o# ~o
+                 k# ~k]
+             (when-not (nil? o#)
+               (when-not (nil? k#)
+                 (~'js-delete o# k#))))))
 
 
 
@@ -71,7 +83,7 @@
                    (recur carry-over))))
              o)))
 
-#?(:cljs (defn unchecked-set!-fn [o & args]
+#?(:cljs (defn set-js!-fn [o & args]
            (assert (even? (count args)))
            (loop [kv-list args]
              (when-not (empty? kv-list)
@@ -84,7 +96,7 @@
                                       (namespace k))]
                          (m/aget o (kebab->camel nsk))
                          o)]
-                 (m/aset o nk-camel v)
+                 (m/aset-js o nk-camel v)
                  (recur carry-over))))
            o))
 
@@ -99,6 +111,18 @@
                        (m/aget o (kebab->camel nsk))
                        o)]
                (m/aget o nk-camel)))))
+
+#?(:cljs (defn delete!-fn [o k]
+           (when-not (nil? o)
+             (let [has-name? (or (keyword? k) (symbol? k))
+                   nk-camel (if has-name?
+                              (kebab->camel (name k))
+                              k)
+                   o (if-let [nsk (when has-name?
+                                    (namespace k))]
+                       (m/aget o (kebab->camel nsk))
+                       o)]
+               (m/js-delete o nk-camel)))))
 
 #?(:cljs (defn merge! [o & ms]
            (doseq [m ms]
@@ -142,7 +166,7 @@
                  ~@ok-bodies
                  ~ng-body)))))
 
-#?(:clj (defmacro -unchecked-set! [o & args]
+#?(:clj (defmacro -set-js! [o & args]
           (assert (even? (count args)))
           (let [kv-list (partition 2 args)
                 ok-list (remove (fn [[k v]] (expr? k)) kv-list)
@@ -150,18 +174,18 @@
                 o-sym (gensym)
                 ok-bodies (map (fn [[k v]]
                                  (if-not (keyword? k)
-                                   `(aset ~o-sym ~k ~v)
+                                   `(aset-js ~o-sym ~k ~v)
                                    (let [nk-camel (kebab->camel (name k))]
                                      (if-let [nsk (namespace k)]
                                        (let [nsk-camel (kebab->camel nsk)]
-                                         `(aset (aget ~o-sym ~nsk-camel)
+                                         `(aset-js (aget ~o-sym ~nsk-camel)
                                                 ~nk-camel
                                                 ~v))
-                                       `(aset ~o-sym ~nk-camel ~v)))))
+                                       `(aset-js ~o-sym ~nk-camel ~v)))))
                                ok-list)
                 ng-body (if (empty? ng-list)
                           o-sym
-                          `(unchecked-set!-fn ~o-sym ~@(apply concat ng-list)))]
+                          `(set-js!-fn ~o-sym ~@(apply concat ng-list)))]
             `(let [~o-sym ~o]
                ~@ok-bodies
                ~ng-body))))
@@ -178,9 +202,21 @@
                              ~nk-camel)
                       `(aget ~o ~nk-camel))))))
 
+#?(:clj (defmacro -delete! [o k]
+          (cond
+            (nil? o) nil
+            (nil? k) nil
+            (expr? k) `(delete!-fn ~o ~k)
+            (not (keyword? k)) `(js-delete ~o ~k)
+            :else (let [nk-camel (kebab->camel (name k))]
+                    (if-let [nsk (namespace k)]
+                      `(js-delete (aget ~o ~(kebab->camel nsk))
+                                  ~nk-camel)
+                      `(js-delete ~o ~nk-camel))))))
+
 #?(:clj (defmacro assoc! [o & args] `(-set! ~o ~@args)))
 #?(:clj (defmacro set! [o & args] `(-set! ~o ~@args)))
-#?(:clj (defmacro unchecked-set! [o & args] `(-unchecked-set! ~o ~@args)))
-#?(:clj (defmacro uset! [o & args] `(-unchecked-set! ~o ~@args)))
+#?(:clj (defmacro set-js! [o & args] `(-set-js! ~o ~@args)))
 #?(:clj (defmacro get [o k] `(-get ~o ~k)))
+#?(:clj (defmacro delete! [o k] `(-delete! ~o ~k)))
 
