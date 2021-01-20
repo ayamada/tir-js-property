@@ -130,6 +130,12 @@
                (set!-fn o k v)))
            o))
 
+#?(:cljs (defn merge-js! [o & ms]
+           (doseq [m ms]
+             (doseq [[k v] m]
+               (set-js!-fn o k v)))
+           o))
+
 ;;; NB: this is shallow !!!
 #?(:cljs (defn map->js-obj [m]
            (merge! (js-obj) m)))
