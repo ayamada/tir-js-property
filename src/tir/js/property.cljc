@@ -226,3 +226,17 @@
 #?(:clj (defmacro get [o k] `(-get ~o ~k)))
 #?(:clj (defmacro delete! [o k] `(-delete! ~o ~k)))
 
+
+#?(:clj (defmacro update! [o k f & args]
+          (assert (ifn? f))
+          (if (keyword? k)
+            `(let [o# ~o]
+               (-set! o# ~k (~f (-get o# ~k) ~@args)))
+            `(let [o# ~o
+                   k# ~k]
+               (-set! o# k# (~f (-get o# k#) ~@args))))))
+
+
+
+
+

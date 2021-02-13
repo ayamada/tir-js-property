@@ -66,6 +66,11 @@
     (p/delete! t :none-node/sub-item) ; Do nothing
     (is (nil? (p/get t :none-node)))
     (is (= 12 (count (seq (js->clj t)))))
+    ;; p/update!
+    (p/update! t :foo-bar inc)
+    (is (= 2 (p/get t :foo-bar)))
+    (p/update! t :new-map assoc :a 1)
+    (is (= {:a 1} (p/get t :new-map)))
     ))
 
 (deftest util
@@ -362,3 +367,7 @@
     (p/set-js! o (count! :a1) 11 (count! :a2) 12)
     (is (= 13 @a-count))
     ))
+
+
+
+
