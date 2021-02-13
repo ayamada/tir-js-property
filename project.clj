@@ -1,4 +1,4 @@
-(defproject jp.ne.tir/tir-js-property "3.1.0-ADVANCED"
+(defproject jp.ne.tir/tir-js-property "3.2.0"
   :description "js property manipulator utility"
   :url "https://github.com/ayamada/tir-js-property"
   :license {:name "Zlib License"
@@ -8,7 +8,7 @@
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
   :source-paths ["src"]
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.2"]
                                   [org.clojure/clojurescript "1.10.773"]]
                    :test-paths ["test"]}}
   :doo {:build "test"}
