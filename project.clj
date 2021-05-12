@@ -8,8 +8,8 @@
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
   :source-paths ["src"]
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.2"]
-                                  [org.clojure/clojurescript "1.10.773"]]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.3"]
+                                  [org.clojure/clojurescript "1.10.844"]]
                    :test-paths ["test"]}}
   :doo {:build "test"}
   :cljsbuild {:builds {:test {:source-paths ["src" "test"]
