@@ -6,11 +6,12 @@
 ;;; differ between this and camel-snake-kebab a bit
 (defn kebab-string->camel-string [s]
   (assert (string? s))
-  (let [s (if-let [[_ m] (re-find #"^(.*)\?$" s)]
+  (let [[_ prefix s] (re-matches #"(\-*)(.*)" s)
+        s (if-let [[_ m] (re-matches #"(.*)\?" s)]
             (str "is-" m)
             s)
         s (string/replace s #"-." #(string/upper-case (subs % 1)))]
-    s))
+    (str prefix s)))
 (def kebab->camel kebab-string->camel-string)
 
 (defn- expr? [o]

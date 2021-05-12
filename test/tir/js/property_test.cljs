@@ -36,8 +36,8 @@
     (is (= "exit" (aget (aget t "subMenu") "itemName"))) ; Not affected
     (is (= (js->clj (p/set! #js {} :none/child 4)) ; `p/set!` may create
            {"none" {"child" 4}})) ; nonexistence parent node automatically
-    (p/set! t :--private-cljs-prop 5) ; `:--` as a mark of private use
-    (is (= (aget t "-privateCljsProp") 5)) ; Js property name don't begin `-`
+    (p/set! t :-private-cljs-prop 5) ; `:-` as a mark of private use
+    (is (= (aget t "-privateCljsProp") 5)) ; Js property name may not begin `-`
     (p/set! t :foo-bar/child 6) ; Do nothing, because "fooBar" already exists,
     (is (= 1 (p/get t :foo-bar))) ; and js allow `(1)["child"] = 6` but inanity
     ;; p/set-js! like p/set!, but throw exception by nil parent node or nil key
@@ -77,6 +77,8 @@
   ;; These are useful for make sure key conversion
   (is (= "isEnableCache" (p/kebab-string->camel-string "enable-cache?")))
   (is (= "isEnableCache" (p/kebab->camel "enable-cache?"))) ; Alias
+  (is (= "-privateValue" (p/kebab->camel "-private-value"))) ; Private value
+  (is (= "-isPrivateBool" (p/kebab->camel "-private-bool?"))) ; Private value
   (is (thrown? js/Error (p/kebab->camel :enable-cache?))) ; Must be string
   ;; These are utility functions
   (is (= (js->clj (p/merge! (js-obj)
